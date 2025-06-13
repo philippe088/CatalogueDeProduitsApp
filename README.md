@@ -13,7 +13,7 @@ Ceci est une application de catalogue de produits d�velopp�e en ASP.NET Core
 ## Problèmes critiques à corriger
  1. DONE Bug dans Program.cs
 app.Run() est appelé deux fois (ligne 30 et 32), ce qui causera une erreur
- - 2. DONE Persistence des données
+ - 2. COMMENCE Persistence des données
 Pas de transactions ni de gestion de concurrence
 Risque de perte/corruption de données
 3. DONE Gestion d'erreurs insuffisante
@@ -101,7 +101,7 @@ Validation stricte : Vérification de tous les champs
 
 Support des caractères accentués : Encodage UTF-8
 
-🔄 3. Système de transactions simulées
+🔄 3. Système de transactions simulées *** A VOIR
 
 CsvTransaction : Pattern de transaction avec commit/rollback
 
