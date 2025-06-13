@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modifier un produit - Catalogue de produits</title>
+    <link rel="stylesheet" href="css/site.css" />
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Catalogue de produits</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="/Home/Index">Catalogue de produits</a></li>
+                    <li><a href="/Home/Create">Ajouter un produit</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Modifier un produit</h2>
+            <div class="form-container">
+                <form action="/Home/Edit" method="post">
+                    <input type="hidden" id="Id" name="Id" value="2" />
+                    <div class="form-group">
+                        <label for="Nom">Nom</label>
+                        <input type="text" id="Nom" name="Nom" required maxlength="100" value="Smartphone" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Description">Description</label>
+                        <textarea id="Description" name="Description" required maxlength="250">Un smartphone dernier cri avec un excellent appareil photo.</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="Prix">Prix</label>
+                        <input type="number" id="Prix" name="Prix" step="0.01" min="0" required value="999.99" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Quantite">Quantité</label>
+                        <input type="number" id="Quantite" name="Quantite" min="0" max="150" required value="25" />
+                    </div>
+                    <div class="form-group">
+                        <label for="Image">Image</label>
+                        <input type="text" id="Image" name="Image" required pattern=".+\.(jpg|png)$" value="smartphone.jpg" />
+                        <small>Format accepté: .jpg ou .png</small>
+                    </div>
+                    <div class="form-group disabled">
+                        <label for="Vedette">Est produit vedette</label>
+                        <input type="checkbox" id="Vedette" name="Vedette" value="true" disabled />
+                        <small>Ce champ n'est pas modifiable</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">Enregistrer</button>
+                        <a href="/Home/Index" class="btn btn-secondary">Liste des produits</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 - Catalogue de produits</p>
+        </div>
+    </footer>
+</body>
+</html>

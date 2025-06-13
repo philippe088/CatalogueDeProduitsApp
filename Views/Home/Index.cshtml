@@ -1,0 +1,95 @@
+﻿@model List<Produit>
+@{
+    ViewData["Title"] = "Catalogue de produits";
+}
+
+<div class="container">
+    @* Messages d'erreur et de succès *@
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @{
+        var produitVedette = Model.FirstOrDefault(p => p.Vedette);
+    }
+
+    @if (produitVedette != null)
+    {
+        <div class="produit-vedette">
+            <h2>Produit vedette</h2>
+            <div class="produit-vedette-detail">
+                <div class="produit-vedette-image">
+                    <img src="/images/@produitVedette.Image" alt="@produitVedette.Nom" />
+                </div>
+                <div class="produit-vedette-info">
+                    <h3>@produitVedette.Nom</h3>
+                    <p>@produitVedette.Description</p>
+                    <div class="produit-vedette-actions">
+                        <a asp-action="Edit" asp-route-id="@produitVedette.Id" class="btn btn-primary">Modifier</a>
+                        <a asp-action="Delete" asp-route-id="@produitVedette.Id" class="btn btn-danger">Supprimer</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="filtre">
+        <form asp-action="Index" method="get">
+            <div class="form-group">
+                <input type="text" name="search" placeholder="Rechercher un produit..." value="@Context.Request.Query["search"]" />
+                <button type="submit" class="btn btn-primary">Rechercher</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="produits-liste">
+        <h2>Liste des produits</h2>
+        
+        @if (!Model.Any(p => !p.Vedette))
+        {
+            <p>Aucun produit trouvé.</p>
+        }
+        else
+        {
+            <div class="produits-grid">
+                @foreach (var produit in Model.Where(p => !p.Vedette))
+                {
+                    <div class="produit-item">
+                        <div class="produit-image">
+                            <img src="/images/@produit.Image" alt="@produit.Nom" />
+                        </div>
+                        <div class="produit-info">
+                            <h3>@produit.Nom</h3>
+                            <p>@produit.Description</p>
+                            <div class="produit-actions">
+                                <a asp-action="Edit" asp-route-id="@produit.Id" class="btn btn-primary">Modifier</a>
+                                <a asp-action="Delete" asp-route-id="@produit.Id" class="btn btn-danger">Supprimer</a>
+                            </div>
+                            <div class="produit-prix">@produit.Prix.ToString("C")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+</div>

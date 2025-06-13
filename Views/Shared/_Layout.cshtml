@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Catalogue de produits</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Catalogue de produits</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="Index">Catalogue de produits</a></li>
+                    <li><a asp-controller="Home" asp-action="Create">Ajouter un produit</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                <strong>Erreur :</strong> @TempData["Error"]
+            </div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                <strong>Succès :</strong> @TempData["Success"]
+            </div>
+        }
+        @RenderBody()
+    </main>    <footer>
+        <div class="container">
+            <p>&copy; 2025 - Catalogue de produits</p>
+        </div>
+    </footer>
+    
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

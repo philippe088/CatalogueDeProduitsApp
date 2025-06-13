@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supprimer un produit - Catalogue de produits</title>
+    <link rel="stylesheet" href="css/site.css" />
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Catalogue de produits</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="/Home/Index">Catalogue de produits</a></li>
+                    <li><a href="/Home/Create">Ajouter un produit</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Supprimer un produit</h2>
+            <div class="delete-container">
+                <div class="delete-product">
+                    <div class="produit-image">
+                        <img src="images/smartphone.jpg" alt="Smartphone" />
+                    </div>
+                    <div class="produit-info">
+                        <h3>Smartphone</h3>
+                        <p>Un smartphone dernier cri avec un excellent appareil photo.</p>
+                    </div>
+                </div>
+                <div class="delete-confirm">
+                    <p>Êtes-vous sûr de vouloir supprimer ce produit ?</p>
+                    <form action="/Home/Delete" method="post">
+                        <input type="hidden" name="Id" value="2" />
+                        <button type="submit" class="btn btn-danger">Supprimer</button>
+                        <a href="/Home/Index" class="btn btn-secondary">Annuler</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 - Catalogue de produits</p>
+        </div>
+    </footer>
+</body>
+</html>

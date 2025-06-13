@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catalogue de produits</title>
+    <link rel="stylesheet" href="css/site.css" />
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Catalogue de produits</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="/Home/Index">Catalogue de produits</a></li>
+                    <li><a href="/Home/Create">Ajouter un produit</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Produit vedette -->
+            <div class="produit-vedette">
+                <h2>Produit vedette</h2>
+                <div class="produit-vedette-detail">
+                    <div class="produit-vedette-image">
+                        <img src="images/ordinateur.jpg" alt="Ordinateur portable" />
+                    </div>
+                    <div class="produit-vedette-info">
+                        <h3>Ordinateur portable</h3>
+                        <p>Un ordinateur portable performant pour tous vos besoins informatiques.</p>
+                        <div class="produit-vedette-actions">
+                            <a href="/Home/Edit/1" class="btn btn-primary">Modifier</a>
+                            <a href="/Home/Delete/1" class="btn btn-danger">Supprimer</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zone de filtre -->
+            <div class="filtre">
+                <form action="/Home/Index" method="get">
+                    <div class="form-group">
+                        <input type="text" name="search" placeholder="Rechercher un produit..." />
+                        <button type="submit" class="btn btn-primary">Rechercher</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Liste des produits -->
+            <div class="produits-liste">
+                <h2>Liste des produits</h2>
+                <div class="produits-grid">
+                    <!-- Produit 1 -->
+                    <div class="produit-item">
+                        <div class="produit-image">
+                            <img src="images/smartphone.jpg" alt="Smartphone" />
+                        </div>
+                        <div class="produit-info">
+                            <h3>Smartphone</h3>
+                            <p>Un smartphone dernier cri avec un excellent appareil photo.</p>
+                            <div class="produit-actions">
+                                <a href="/Home/Edit/2" class="btn btn-primary">Modifier</a>
+                                <a href="/Home/Delete/2" class="btn btn-danger">Supprimer</a>
+                            </div>
+                            <div class="produit-prix">999,99 $</div>
+                        </div>
+                    </div>
+                    <!-- Produit 2 -->
+                    <div class="produit-item">
+                        <div class="produit-image">
+                            <img src="images/tablette.jpg" alt="Tablette" />
+                        </div>
+                        <div class="produit-info">
+                            <h3>Tablette</h3>
+                            <p>Une tablette légère et puissante pour travailler en mobilité.</p>
+                            <div class="produit-actions">
+                                <a href="/Home/Edit/3" class="btn btn-primary">Modifier</a>
+                                <a href="/Home/Delete/3" class="btn btn-danger">Supprimer</a>
+                            </div>
+                            <div class="produit-prix">599,99 $</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 - Catalogue de produits</p>
+        </div>
+    </footer>
+</body>
+</html>

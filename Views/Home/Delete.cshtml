@@ -1,0 +1,33 @@
+@model Produit
+@{
+    ViewData["Title"] = "Supprimer un produit";
+}
+
+<div class="container">
+    <h2>Supprimer un produit</h2>
+    
+    <div class="delete-container">
+        <div class="delete-product">
+            <div class="produit-image">
+                <img src="/images/@Model.Image" alt="@Model.Nom" />
+            </div>
+            <div class="produit-info">
+                <h3>@Model.Nom</h3>
+                <p>@Model.Description</p>
+            </div>
+        </div>
+        
+        <div class="delete-confirm">
+            <p>Êtes-vous sûr de vouloir supprimer ce produit ?</p>
+              <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+                <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+                
+                <input type="hidden" asp-for="Id" />
+                @Html.AntiForgeryToken()
+                
+                <button type="submit" class="btn btn-danger">Supprimer</button>
+                <a asp-action="Index" class="btn btn-secondary">Annuler</a>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,65 @@
+@model Produit
+@{
+    ViewData["Title"] = "Modifier un produit";
+}
+
+<div class="container">
+    <h2>Modifier un produit</h2>
+    
+    <div class="form-container">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="form-group">
+                <label asp-for="Nom"></label>
+                <input asp-for="Nom" class="form-control" />
+                <span asp-validation-for="Nom" class="field-validation-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="Description"></label>
+                <textarea asp-for="Description" class="form-control"></textarea>
+                <span asp-validation-for="Description" class="field-validation-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="Prix"></label>
+                <input asp-for="Prix" class="form-control" step="0.01" min="0" />
+                <span asp-validation-for="Prix" class="field-validation-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="Quantite"></label>
+                <input asp-for="Quantite" class="form-control" min="0" max="150" />
+                <span asp-validation-for="Quantite" class="field-validation-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label asp-for="Image"></label>
+                <input asp-for="Image" class="form-control" />
+                <small>Format accepté: .jpg ou .png</small>
+                <span asp-validation-for="Image" class="field-validation-error"></span>
+            </div>
+            
+            <div class="form-group disabled">
+                <label asp-for="Vedette"></label>
+                <input asp-for="Vedette" type="checkbox" disabled />
+                <small>Ce champ n'est pas modifiable</small>
+                <input type="hidden" asp-for="Vedette" />
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">Enregistrer</button>
+                <a asp-action="Index" class="btn btn-secondary">Liste des produits</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
