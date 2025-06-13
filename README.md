@@ -11,16 +11,15 @@ Ceci est une application de catalogue de produits d�velopp�e en ASP.NET Core
 
 
 ## Problèmes critiques à corriger
- 1. DONE Bug dans Program.cs
-app.Run() est appelé deux fois (ligne 30 et 32), ce qui causera une erreur
- - 2. COMMENCE Persistence des données
+
+ - 2. Persistence des données
 Pas de transactions ni de gestion de concurrence
 Risque de perte/corruption de données
-3. DONE Gestion d'erreurs insuffisante
+3. Gestion d'erreurs insuffisante
 Pas de logging approprié
 Gestion d'exceptions limitée
 Pas de middleware de gestion d'erreurs globales
-4. DONE Architecture et séparation des responsabilités
+4. Architecture et séparation des responsabilités
 5. Base de données professionnelle
 Remplacer CSV par Entity Framework Core + SQL Server/PostgreSQL
 Migrations de base de données
