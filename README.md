@@ -2,18 +2,13 @@
 
 Ceci est une application de catalogue de produits d�velopp�e en ASP.NET Core MVC.
 
-## Fonctionnalit�s
+## Fonctionnalites
 
 - Affichage des produits
 - Ajout, modification et suppression de produits
 - Filtrage des produits par nom
 - Gestion d'un produit vedette
 
-## Notes
-
-Assurez-vous de cr�er le dossier 'Data' � la racine du projet pour stocker le fichier CSV des produits.
-
-Ajoutez des images de produits dans le dossier wwwroot/images avec les extensions .jpg ou .png.
 
 ## Problèmes critiques à corriger
  1. DONE Bug dans Program.cs
@@ -25,8 +20,7 @@ Risque de perte/corruption de données
 Pas de logging approprié
 Gestion d'exceptions limitée
 Pas de middleware de gestion d'erreurs globales
-🏗️ Améliorations architecturales majeures
-4. Architecture et séparation des responsabilités
+4. DONE Architecture et séparation des responsabilités
 5. Base de données professionnelle
 Remplacer CSV par Entity Framework Core + SQL Server/PostgreSQL
 Migrations de base de données
@@ -37,7 +31,6 @@ Authentification et autorisation manquantes
 Validation côté serveur insuffisante
 Protection CSRF limitée
 Pas de politique de sécurité des headers
-📊 Fonctionnalités manquantes
 7. API REST
 Endpoints API pour intégration externe
 Documentation OpenAPI/Swagger
