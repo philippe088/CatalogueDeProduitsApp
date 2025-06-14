@@ -15,7 +15,8 @@ namespace CatalogueDeProduitsApp.Services.Repositories
     {
         private readonly ILogger<CsvProduitRepository> _logger;
         private readonly string _csvFilePath;
-        private readonly CsvFileManager _fileManager;        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private readonly CsvFileManager _fileManager;        
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private int _lastId = 0;
         private bool _disposed = false;
         private bool _initialized = false;
