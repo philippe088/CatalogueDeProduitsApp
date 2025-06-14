@@ -12,6 +12,9 @@ namespace CatalogueDeProduitsApp.Services
         private readonly string _metricsPath;
         private readonly Timer _metricsTimer;
         private readonly ConcurrentMetrics _metrics;
+        private readonly Dictionary<string, DateTime> _activeOperations = new();
+        private readonly object _operationsLock = new object();
+
 
         public CsvMonitoringService(ILogger<CsvMonitoringService> logger, IWebHostEnvironment environment)
         {
@@ -34,25 +37,25 @@ namespace CatalogueDeProduitsApp.Services
             try
             {
                 _logger.LogInformation("Début de l'opération: {OperationName}", operationName);
-                
+
                 var result = await operation();
-                
+
                 stopwatch.Stop();
                 _metrics.RecordSuccess(operationName, stopwatch.ElapsedMilliseconds);
-                
-                _logger.LogInformation("Opération {OperationName} réussie en {ElapsedMs}ms", 
+
+                _logger.LogInformation("Opération {OperationName} réussie en {ElapsedMs}ms",
                     operationName, stopwatch.ElapsedMilliseconds);
-                
+
                 return result;
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
                 _metrics.RecordFailure(operationName, stopwatch.ElapsedMilliseconds);
-                
-                _logger.LogError(ex, "Opération {OperationName} échouée après {ElapsedMs}ms", 
+
+                _logger.LogError(ex, "Opération {OperationName} échouée après {ElapsedMs}ms",
                     operationName, stopwatch.ElapsedMilliseconds);
-                
+
                 throw;
             }
         }
@@ -63,7 +66,7 @@ namespace CatalogueDeProduitsApp.Services
         public void RecordError(string operation, string errorType, string message)
         {
             _metrics.RecordCustomError(operation, errorType, message);
-            _logger.LogError("Erreur personnalisée - Opération: {Operation}, Type: {ErrorType}, Message: {Message}", 
+            _logger.LogError("Erreur personnalisée - Opération: {Operation}, Type: {ErrorType}, Message: {Message}",
                 operation, errorType, message);
         }
 
@@ -94,16 +97,16 @@ namespace CatalogueDeProduitsApp.Services
                 {
                     var dirInfo = new DirectoryInfo(directory);
                     result.IsHealthy = dirInfo.Exists;
-                    
+
                     if (result.IsHealthy)
                     {
                         // Vérifier l'espace disque disponible
                         var drive = new DriveInfo(dirInfo.Root.FullName);
                         var freeSpaceGB = drive.AvailableFreeSpace / (1024.0 * 1024.0 * 1024.0);
-                        
+
                         result.Details["FreeSpaceGB"] = freeSpaceGB.ToString("F2");
                         result.Details["TotalSpaceGB"] = (drive.TotalSize / (1024.0 * 1024.0 * 1024.0)).ToString("F2");
-                        
+
                         if (freeSpaceGB < 1.0) // Moins de 1GB disponible
                         {
                             result.IsHealthy = false;
@@ -126,11 +129,11 @@ namespace CatalogueDeProduitsApp.Services
                     // Test de lecture/écriture
                     var testContent = $"Health check test - {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}";
                     var testFile = filePath + ".healthcheck";
-                    
+
                     await File.WriteAllTextAsync(testFile, testContent);
                     var readContent = await File.ReadAllTextAsync(testFile);
                     File.Delete(testFile);
-                    
+
                     if (readContent != testContent)
                     {
                         result.IsHealthy = false;
@@ -158,8 +161,8 @@ namespace CatalogueDeProduitsApp.Services
             try
             {
                 var snapshot = _metrics.GetSnapshot();
-                var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions 
-                { 
+                var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
+                {
                     WriteIndented = true,
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 });
@@ -184,137 +187,206 @@ namespace CatalogueDeProduitsApp.Services
             _metricsTimer?.Dispose();
             SaveMetrics(null); // Sauvegarde finale
         }
-    }
 
-    /// <summary>
-    /// Métriques thread-safe
-    /// </summary>
-    public class ConcurrentMetrics
-    {
-        private readonly object _lock = new object();
-        private readonly Dictionary<string, OperationMetrics> _operations = new();
-        private readonly List<CustomError> _customErrors = new();
-
-        public void RecordSuccess(string operation, long durationMs)
+        //start operation
+        public void StartOperation(string operationName)
         {
-            lock (_lock)
+            _logger.LogInformation("Démarrage de l'opération: {OperationName}", operationName);
+            
+            lock (_operationsLock)
             {
-                if (!_operations.ContainsKey(operation))
-                {
-                    _operations[operation] = new OperationMetrics { Name = operation };
-                }
+                // Enregistrer le temps de début de l'opération
+                _activeOperations[operationName] = DateTime.UtcNow;
+            }
+            
+            // Optionnel: incrémenter un compteur d'opérations démarrées
+            _metrics.IncrementOperationStarted(operationName);
+        }
 
-                var metrics = _operations[operation];
-                metrics.SuccessCount++;
-                metrics.TotalDurationMs += durationMs;
-                metrics.LastSuccessTime = DateTime.UtcNow;
+        //stop operation
+        public void EndOperation(string operationName, bool success = true, string? errorMessage = null)
+        {
+            DateTime startTime;
+            TimeSpan duration;
+            
+            lock (_operationsLock)
+            {
+                if (_activeOperations.TryGetValue(operationName, out startTime))
+                {
+                    duration = DateTime.UtcNow - startTime;
+                    _activeOperations.Remove(operationName);
+                }
+                else
+                {
+                    _logger.LogWarning("Tentative de fin d'opération non démarrée: {OperationName}", operationName);
+                    duration = TimeSpan.Zero;
+                }
+            }
+            
+            var durationMs = (int)duration.TotalMilliseconds;
+            
+            if (success)
+            {
+                _logger.LogInformation("Opération terminée avec succès: {OperationName} en {Duration}ms", 
+                    operationName, durationMs);
+                _metrics.RecordSuccess(operationName, durationMs);
+            }
+            else
+            {
+                _logger.LogWarning("Opération échouée: {OperationName} en {Duration}ms - {Error}", 
+                    operationName, durationMs, errorMessage ?? "Erreur inconnue");
+                _metrics.RecordFailure(operationName, durationMs);
                 
-                if (durationMs > metrics.MaxDurationMs)
-                    metrics.MaxDurationMs = durationMs;
-                
-                if (metrics.MinDurationMs == 0 || durationMs < metrics.MinDurationMs)
-                    metrics.MinDurationMs = durationMs;
-            }
-        }
-
-        public void RecordFailure(string operation, long durationMs)
-        {
-            lock (_lock)
-            {
-                if (!_operations.ContainsKey(operation))
+                if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    _operations[operation] = new OperationMetrics { Name = operation };
-                }
-
-                var metrics = _operations[operation];
-                metrics.FailureCount++;
-                metrics.LastFailureTime = DateTime.UtcNow;
-            }
-        }
-
-        public void RecordCustomError(string operation, string errorType, string message)
-        {
-            lock (_lock)
-            {
-                _customErrors.Add(new CustomError
-                {
-                    Operation = operation,
-                    ErrorType = errorType,
-                    Message = message,
-                    Timestamp = DateTime.UtcNow
-                });
-
-                // Garder seulement les 100 dernières erreurs
-                if (_customErrors.Count > 100)
-                {
-                    _customErrors.RemoveAt(0);
+                    _metrics.RecordCustomError(operationName, "Operation", errorMessage);
                 }
             }
         }
 
-        public MetricsSnapshot GetSnapshot()
+        /// <summary>
+        /// Métriques thread-safe
+        /// </summary>
+        public class ConcurrentMetrics
         {
-            lock (_lock)
+            private readonly object _lock = new object();
+            private readonly Dictionary<string, OperationMetrics> _operations = new();
+            private readonly List<CustomError> _customErrors = new();
+
+            public void RecordSuccess(string operation, long durationMs)
             {
-                return new MetricsSnapshot
+                lock (_lock)
                 {
-                    Operations = _operations.Values.Select(o => new OperationMetrics
+                    if (!_operations.ContainsKey(operation))
                     {
-                        Name = o.Name,
-                        SuccessCount = o.SuccessCount,
-                        FailureCount = o.FailureCount,
-                        TotalDurationMs = o.TotalDurationMs,
-                        MinDurationMs = o.MinDurationMs,
-                        MaxDurationMs = o.MaxDurationMs,
-                        LastSuccessTime = o.LastSuccessTime,
-                        LastFailureTime = o.LastFailureTime,
-                        AverageDurationMs = o.SuccessCount > 0 ? o.TotalDurationMs / o.SuccessCount : 0,
-                        SuccessRate = o.TotalCount > 0 ? (double)o.SuccessCount / o.TotalCount * 100 : 0
-                    }).ToList(),
-                    RecentErrors = _customErrors.TakeLast(20).ToList(),
-                    GeneratedAt = DateTime.UtcNow
-                };
+                        _operations[operation] = new OperationMetrics { Name = operation };
+                    }
+
+                    var metrics = _operations[operation];
+                    metrics.SuccessCount++;
+                    metrics.TotalDurationMs += durationMs;
+                    metrics.LastSuccessTime = DateTime.UtcNow;
+
+                    if (durationMs > metrics.MaxDurationMs)
+                        metrics.MaxDurationMs = durationMs;
+
+                    if (metrics.MinDurationMs == 0 || durationMs < metrics.MinDurationMs)
+                        metrics.MinDurationMs = durationMs;
+                }
+            }
+
+            public void RecordFailure(string operation, long durationMs)
+            {
+                lock (_lock)
+                {
+                    if (!_operations.ContainsKey(operation))
+                    {
+                        _operations[operation] = new OperationMetrics { Name = operation };
+                    }
+
+                    var metrics = _operations[operation];
+                    metrics.FailureCount++;
+                    metrics.LastFailureTime = DateTime.UtcNow;
+                }
+            }
+
+            public void RecordCustomError(string operation, string errorType, string message)
+            {
+                lock (_lock)
+                {
+                    _customErrors.Add(new CustomError
+                    {
+                        Operation = operation,
+                        ErrorType = errorType,
+                        Message = message,
+                        Timestamp = DateTime.UtcNow
+                    });
+
+                    // Garder seulement les 100 dernières erreurs
+                    if (_customErrors.Count > 100)
+                    {
+                        _customErrors.RemoveAt(0);
+                    }
+                }
+            }
+
+            public void IncrementOperationStarted(string operation)
+            {
+                lock (_lock)
+                {
+                    if (!_operations.ContainsKey(operation))
+                    {
+                        _operations[operation] = new OperationMetrics { Name = operation };
+                    }
+                    // Cette méthode peut être utilisée pour suivre les opérations démarrées
+                    // Pour l'instant, elle initialise juste l'entrée dans le dictionnaire
+                }
+            }
+
+            public MetricsSnapshot GetSnapshot()
+            {
+                lock (_lock)
+                {
+                    return new MetricsSnapshot
+                    {
+                        Operations = _operations.Values.Select(o => new OperationMetrics
+                        {
+                            Name = o.Name,
+                            SuccessCount = o.SuccessCount,
+                            FailureCount = o.FailureCount,
+                            TotalDurationMs = o.TotalDurationMs,
+                            MinDurationMs = o.MinDurationMs,
+                            MaxDurationMs = o.MaxDurationMs,
+                            LastSuccessTime = o.LastSuccessTime,
+                            LastFailureTime = o.LastFailureTime,
+                            AverageDurationMs = o.SuccessCount > 0 ? o.TotalDurationMs / o.SuccessCount : 0,
+                            SuccessRate = o.TotalCount > 0 ? (double)o.SuccessCount / o.TotalCount * 100 : 0
+                        }).ToList(),
+                        RecentErrors = _customErrors.TakeLast(20).ToList(),
+                        GeneratedAt = DateTime.UtcNow
+                    };
+                }
             }
         }
-    }
 
-    // Classes de données
-    public class OperationMetrics
-    {
-        public string Name { get; set; } = string.Empty;
-        public long SuccessCount { get; set; }
-        public long FailureCount { get; set; }
-        public long TotalDurationMs { get; set; }
-        public long MinDurationMs { get; set; }
-        public long MaxDurationMs { get; set; }
-        public DateTime? LastSuccessTime { get; set; }
-        public DateTime? LastFailureTime { get; set; }
-        public double AverageDurationMs { get; set; }
-        public double SuccessRate { get; set; }
-        public long TotalCount => SuccessCount + FailureCount;
-    }
+        // Classes de données
+        public class OperationMetrics
+        {
+            public string Name { get; set; } = string.Empty;
+            public long SuccessCount { get; set; }
+            public long FailureCount { get; set; }
+            public long TotalDurationMs { get; set; }
+            public long MinDurationMs { get; set; }
+            public long MaxDurationMs { get; set; }
+            public DateTime? LastSuccessTime { get; set; }
+            public DateTime? LastFailureTime { get; set; }
+            public double AverageDurationMs { get; set; }
+            public double SuccessRate { get; set; }
+            public long TotalCount => SuccessCount + FailureCount;
+        }
 
-    public class CustomError
-    {
-        public string Operation { get; set; } = string.Empty;
-        public string ErrorType { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
-        public DateTime Timestamp { get; set; }
-    }
+        public class CustomError
+        {
+            public string Operation { get; set; } = string.Empty;
+            public string ErrorType { get; set; } = string.Empty;
+            public string Message { get; set; } = string.Empty;
+            public DateTime Timestamp { get; set; }
+        }
 
-    public class MetricsSnapshot
-    {
-        public List<OperationMetrics> Operations { get; set; } = new();
-        public List<CustomError> RecentErrors { get; set; } = new();
-        public DateTime GeneratedAt { get; set; }
-    }
+        public class MetricsSnapshot
+        {
+            public List<OperationMetrics> Operations { get; set; } = new();
+            public List<CustomError> RecentErrors { get; set; } = new();
+            public DateTime GeneratedAt { get; set; }
+        }
 
-    public class HealthCheckResult
-    {
-        public string CheckName { get; set; } = string.Empty;
-        public bool IsHealthy { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public DateTime Timestamp { get; set; }
-        public Dictionary<string, string> Details { get; set; } = new();
+        public class HealthCheckResult
+        {
+            public string CheckName { get; set; } = string.Empty;
+            public bool IsHealthy { get; set; }
+            public string Message { get; set; } = string.Empty;
+            public DateTime Timestamp { get; set; }
+            public Dictionary<string, string> Details { get; set; } = new();
+        }
     }
 }
