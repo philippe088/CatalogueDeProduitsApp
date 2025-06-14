@@ -33,17 +33,20 @@ namespace CatalogueDeProduitsApp.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Produit>>> GetProduits()
         {
+            const string operationName = "GetAllProduits";
+            
             try
             {
-                _monitoringService.StartOperation("GetAllProduits");
+                _monitoringService.StartOperation(operationName);
                 var produits = await _produitRepository.GetAllAsync();
-                _monitoringService.EndOperation("GetAllProduits");
+                _monitoringService.EndOperation(operationName, success: true);
                 
                 _logger.LogInformation("Récupération de {Count} produits", produits.Count());
                 return Ok(produits);
             }
             catch (Exception ex)
             {
+                _monitoringService.EndOperation(operationName, success: false, ex.Message);
                 _logger.LogError(ex, "Erreur lors de la récupération des produits");
                 return StatusCode(500, "Erreur interne du serveur");
             }
@@ -55,11 +58,12 @@ namespace CatalogueDeProduitsApp.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Produit>> GetProduit(int id)
         {
+            const string operationName = "GetProduitById";
             try
             {
-                _monitoringService.StartOperation("GetProduitById");
+                _monitoringService.StartOperation(operationName);
                 var produit = await _produitRepository.GetByIdAsync(id);
-                _monitoringService.EndOperation("GetProduitById");
+                _monitoringService.EndOperation(operationName);
 
                 if (produit == null)
                 {
@@ -82,6 +86,8 @@ namespace CatalogueDeProduitsApp.Controllers
         [HttpPost]
         public async Task<ActionResult<Produit>> CreateProduit([FromBody] Produit produit)
         {
+            const string operationName = "CreateProduit";
+            
             try
             {
                 if (produit == null)
@@ -94,25 +100,27 @@ namespace CatalogueDeProduitsApp.Controllers
                     return BadRequest(ModelState);
                 }
 
-                _monitoringService.StartOperation("CreateProduit");
-                var result = await _produitRepository.AddAsync(produit);
-                _monitoringService.EndOperation("CreateProduit");
+                _monitoringService.StartOperation(operationName);
+                var nouveauProduit = await _produitRepository.AddAsync(produit);
+                _monitoringService.EndOperation(operationName, success: true);
 
-                if (result.Data != null)
+                if (nouveauProduit?.Data != null)
                 {
-                    _logger.LogInformation("Nouveau produit créé avec ID {Id}", result.Data.Id);
+                    _logger.LogInformation("Nouveau produit créé avec ID {Id}", nouveauProduit.Data.Id);
                     return CreatedAtAction(
                         nameof(GetProduit), 
-                        new { id = result.Data.Id }, 
-                        result.Data);
+                        new { id = nouveauProduit.Data.Id }, 
+                        nouveauProduit.Data);
                 }
                 else
                 {
+                    _logger.LogError("Erreur lors de la création du produit - résultat null");
                     return StatusCode(500, "Erreur lors de la création du produit");
                 }
             }
             catch (Exception ex)
             {
+                _monitoringService.EndOperation(operationName, success: false, ex.Message);
                 _logger.LogError(ex, "Erreur lors de la création du produit");
                 return StatusCode(500, "Erreur interne du serveur");
             }
