@@ -1,4 +1,4 @@
-﻿1,chandail pour femme,chandail pour femme,9.99,10,image1.png,false
+﻿1,chandail pour Homme,chandail pour Homme,9.99,11,image2.png,false
 3,T-shirt Noir Logo Dino,T-shirt en coton biologique unisexe,25.99,14,image3.png,false
 4,Polo Unisexe,Polo Unisexe,45.50,8,image4.png,false
 5,Chaussures de sport,Chaussures de course légères,79.99,5,image5.png,false
@@ -9,4 +9,5 @@
 10,Ceinture en cuir,Ceinture en cuir véritable avec boucle métallique,29.99,10,image10.png,false
 11,Lunettes de soleil,Lunettes de soleil polarisées protection UV,49.95,6,image11.png,false
 12,Montre analogique,Montre élégante avec bracelet en acier inoxydable,85.00,4,image12.png,false
-13,Chandail Pour Homme,Chandail Pour Homme,10.00,1,image2.png,true
+13,Chandail Pour Homme,Chandail Pour Homme,10.00,1,image2.png,false
+14,Test,Test,1.00,1,image1.png,true
